@@ -1,0 +1,18 @@
+[package]
+name = "strung_derive"
+version = "0.1.0"
+edition = "2021"
+
+authors = ["Dekirisu <dekirisu@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "proc-macro for strung!"
+repository = "https://github.com/dekirisu/strung/"
+keywords = ["string","struct","format","fmt","replace"]
+categories = ["value-formatting","rust-patterns"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "1.0"
+quote = "1.0"
