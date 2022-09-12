@@ -1,16 +1,5 @@
 //! String formatter/builder with easy access of struct fields, which implement the [std::fmt::Display] trait.
 //! If they do not, they can be marked to be ignored.
-// ! # ⏱ tl;dr
-// ! ```
-// ! #[derive(Strung)] struct Nmd {n:u32}
-// ! Nmd{n:1}.strung("{n}st"); // "1st"
-// ! #[derive(Strung)] struct Tup (u32);
-// ! Tup(1).strung("{0}st"); // "1st"
-// ! #[derive(Strung)]#[strung("<",">")] struct Cst (u32);
-// ! Cst(1).strung("<0>st"); // "1st"
-// ! #[derive(Strung)] struct Rec (#[strung(cascade,ignore)]Tup);
-// ! Rec(Tup(1)).strung_dollar("$0.0st"); // 1st
-// ! ```
 //! # Usage
 //! Here's most you have to know!
 //! ```
