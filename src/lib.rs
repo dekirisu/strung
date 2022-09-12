@@ -53,6 +53,10 @@
 //!     let text = NAMED.strung_hashtag("#num#name");
 //!     assert_eq!(&text,"1st");
 //! 
+//!     // [strung_angle] for <field_name>
+//!     let text = NAMED.strung_angle("<num><name>");
+//!     assert_eq!(&text,"1st");
+//! 
 //!     // most flexible - inline setting via [strung_dynamic] - a bit less efficient
 //!     let text = NAMED.strung_dynamic("<",">","<num><name>");
 //!     assert_eq!(&text,"1st");
@@ -238,6 +242,8 @@ pub trait Strung {
     fn strung_dollry(&self, text: &str) -> String;
     /// Same as [Strung::strung] but not changable and always addressable by `#field_name`
     fn strung_hashtag(&self, text: &str) -> String;
+    /// Same as [Strung::strung] but not changable and always addressable by `<field_name>`
+    fn strung_angle(&self, text: &str) -> String;
 }
 
 pub mod config {

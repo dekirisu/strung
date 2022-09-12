@@ -44,6 +44,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
         let mut fnames_dollar = vec![];
         let mut fnames_dollry = vec![];
         let mut fnames_hashtag = vec![];
+        let mut fnames_angle = vec![];
         let mut fnamesraw = vec![];
 
         let mut unn = vec![];
@@ -51,6 +52,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
         let mut unn_dollar = vec![];
         let mut unn_dollry = vec![];
         let mut unn_hashtag = vec![];
+        let mut unn_angle = vec![];
         let mut unnraw = vec![];
         let mut unnid = vec![];
 
@@ -103,6 +105,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
                     fnames_dollar.push(format!("${}",&f_name));
                     fnames_dollry.push(format!("${{{}}}",&f_name));
                     fnames_hashtag.push(format!("#{}",&f_name));
+                    fnames_angle.push(format!("<{}>",&f_name,));
                 }
             },
             syn::Fields::Unnamed(fields) => {
@@ -144,6 +147,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
                         unn_dollar.push(format!("${}",i));
                         unn_dollry.push(format!("${{{}}}",i));
                         unn_hashtag.push(format!("#{}",i));
+                        unn_angle.push(format!("<{}>",i));
                     }
                     i += 1;
                 }
@@ -209,6 +213,12 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
                         output = output.replace(&#cscd_unmd_str_h,"#");
                         output = self.#cscd_unmd.strung_hashtag(&output);
                     )*
+                    output
+                }
+                fn strung_angle(&self, text: &str) -> String {
+                    let mut output = text.to_string();
+                    #(output = output.replace(&#fnames_angle,&self.#idents.to_string());)*
+                    #(output = output.replace(&#unn_angle,&self.#unnid.to_string());)*
                     output
                 }
 
