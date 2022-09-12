@@ -246,6 +246,19 @@ pub trait Strung {
     fn strung_angle(&self, text: &str) -> String;
 }
 
+/// Just an empty unit struct with Strung trait!
+pub struct StrungUnit;
+impl Strung for StrungUnit {
+    fn strung_dynamic(&self, _pre: &str, _post:&str, text: &str) -> String {text.into()}
+    fn strung(&self, text: &str)            -> String {text.into()}
+    fn strung_static(&self, text: &str)     -> String {text.into()}
+    fn strung_curly(&self, text: &str)      -> String {text.into()}
+    fn strung_dollar(&self, text: &str)     -> String {text.into()}
+    fn strung_dollry(&self, text: &str)     -> String {text.into()}
+    fn strung_hashtag(&self, text: &str)    -> String {text.into()}
+    fn strung_angle(&self, text: &str)      -> String {text.into()}
+}
+
 pub mod config {
     //! Configurations, currently just static pre- and postfix! 👻
 
@@ -292,6 +305,6 @@ pub mod config {
 pub mod prelude {
     //! All needed goods!
     pub use strung_derive::*;
-    pub use super::{Strung};
+    pub use super::{Strung,StrungUnit};
     pub use super::config::{STRUNG_PRE,STRUNG_POST};
 }
