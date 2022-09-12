@@ -1,6 +1,6 @@
 [![GitHub](https://img.shields.io/badge/github-dekirisu/strung-ee6677)](https://github.com/dekirisu/strung)
 [![Version](https://img.shields.io/crates/v/strung)](https://crates.io/crates/strung)
-[![Docs](https://img.shields.io/docsrs/strung)](https://crates.io/crates/strung)
+[![Docs](https://img.shields.io/docsrs/strung)](https://docs.rs/strung)
 [![License](https://img.shields.io/crates/l/strung)](https://crates.io/crates/strung)
 [![Discord](https://img.shields.io/discord/515100001903312898)](https://discord.gg/kevWvBuPFg)
 

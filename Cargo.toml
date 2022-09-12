@@ -9,6 +9,7 @@ description = "Easy access of struct fields in strings using different/custom pr
 repository = "https://github.com/dekirisu/strung/"
 keywords = ["string","struct","format","fmt","replace"]
 categories = ["value-formatting","rust-patterns"]
+documentation = "https://docs.rs/strung"
 
 [dependencies]
 strung_derive = {version="0.1.0", optional=true}
