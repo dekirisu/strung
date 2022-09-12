@@ -189,7 +189,7 @@ There's also the possibility of cascading. e.g.: `$field.0.num`, it's experiment
 cause it was the easiest to do. 🦀
 
 For this to work, the field-type has to derive [Strung] via derive macro and mark it with the `#[strung(cascade)]` attribute:
-```
+```rust
 use strung::prelude::*;
 
 // #[strung(ignore)] just because none of them are implementing Display!
