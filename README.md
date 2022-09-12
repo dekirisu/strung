@@ -60,6 +60,10 @@ fn main(){
     let text = NAMED.strung_hashtag("#num#name");
     assert_eq!(&text,"1st");
 
+    // [strung_angle] for #field_name
+    let text = NAMED.strung_angle("<num><name>");
+    assert_eq!(&text,"1st");
+
     // most flexible - inline setting via [strung_dynamic] - a bit less efficient
     let text = NAMED.strung_dynamic("<",">","<num><name>");
     assert_eq!(&text,"1st");
