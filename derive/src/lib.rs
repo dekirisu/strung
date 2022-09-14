@@ -13,6 +13,8 @@ pub fn strung_macro_derive(input: TokenStream) -> TokenStream {
 
 fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
+    let (impl_generics, ty_generics, where_clause) = &ast.generics.split_for_impl();
+
     let (mut pre, mut post) = ("{".to_string(),"}".to_string());
     for aaa in &ast.attrs {
         let ewr = aaa.path.get_ident();
@@ -155,7 +157,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
             _ => {},
         }
         let gen = quote! {
-            impl Strung for #name {
+            impl #impl_generics ::strung::Strung for #name #ty_generics #where_clause {
                 fn strung(&self, text: &str) -> String {
                     let mut output = text.to_string();
                     #(output = output.replace(&#fnames,&self.#idents.to_string());)*
