@@ -97,16 +97,16 @@
 //!     // ignore: makes this field unavailable
 //!     // this would fail w/o the ignore, cause no [Display]!
 //!     // other usage: gain a lil more performance
-//!     #[strung(ignore)] nop: NoDsply  
+//!     #[igno] // or #[strung(igno)] 2b more specific
+//!     nop: NoDsply 
 //! }
 //! 
 //! // custom pre/postfix per struct + ignore
 //! #[derive(Strung)]   // easy derive
 //! struct TestCascade {
 //!     // cascade: makes the fields of another Strung available
-//!     // the ignore only affects the the struct itself, not its fields
-//!     // and this would fail w/o it cause it doesn't implement it!
-//!     #[strung(cascade,ignore)]
+//!     // automatically ignores the struct itself, not its fields
+//!     #[cscd] //, #[cascade], #[strung(cascade)] or #[strung(cscd)]
 //!      tup: TestTup  
 //! }
 //! 
@@ -126,19 +126,24 @@
 //! 
 //! But: here's how it can be used for now:
 //! ```
-//! use strung::prelude::*;                     // Import everything from prelude
-//! strung::config::static_on_file!("[","]");   // 🌱 Shadow static pre/postfix for this file.
-//! #[derive(Strung)]                           // You know the drill :)
+//! // Import everything from prelude
+//! use strung::prelude::*;       
+//! // Shadow static pre/postfix for this file.              
+//! strung::config::static_on_file!("[","]");   
+//! 
+//! #[derive(Strung)]                        
 //! struct Test {
 //!     text: &'static str,
 //!     num: u32
 //! }
 //! fn main(){
-//!     let test = Test {                       // Create struct as usual
+//!     // Create struct as usual
+//!     let test = Test {                       
 //!         text: "5k",
 //!         num: 5000
 //!     };
-//!     let text = test.strung_static("[text]=[num]");  // 🌱 Use whatever you've set above
+//!     // Use whatever you've set above
+//!     let text = test.strung_static("[text]=[num]");  
 //!     assert_eq!(&text,"5k=5000");
 //! }
 //! ```
@@ -146,37 +151,45 @@
 //! Sometimes you wanna ignore certain fields - e.g. in these scenarios:
 //! - Get even moar efficiency 📈
 //! - A field-type doesn't implement [std::fmt::Display]
-//! This can be done with the #[strung(ignore)] attribute:
+//! This can be done with the `#[igno]` attribute, or if it interferes with other
+//! macros, you can be more specific: `#[strung(ignore)]` or `#[strung(igno)]`:
 //! ```
-//! use strung::prelude::*;                     // Import everything from prelude
-//! 
-//! struct CustomField (u32);                   // 🌱 A struct, not impl Display
+//! // Import everything from prelude
+//! use strung::prelude::*;
+//! // A struct, not impl Display
+//! struct CustomField (u32);                   
 //! 
 //! #[derive(Strung)]
 //! struct Test {
 //!     num: u32,
-//!     #[strung(ignore)] nope: CustomField     // 🌱 Would fail without the attribute!
+//!     // Would fail without the attribute:
+//!     #[igno] nope: CustomField     
 //! }
 //! 
 //! #[derive(Strung)]
 //! struct TestTup (
 //!     u32, 
-//!     #[strung(ignore)] CustomField,          // 🌱 Would fail without the attribute!
+//!     // Would fail without the attribute:
+//!     #[strung(ignore)] CustomField,          
 //!     &'static str
 //! ); 
 //! 
 //! fn main(){
 //!     /* ------------------------------ Named Fields ------------------------------ */
-//!     let test = Test {                               // Create struct as usual
+//!     // Create struct as usual
+//!     let test = Test {                               
 //!         num: 1,
-//!         nope: CustomField(0),                       // 🌱
+//!         nope: CustomField(0), 
 //!     };
-//!     let text = test.strung("Number {num} {nope}");  // 🌱 {nope} not available!
+//!     // {nope} not available!
+//!     let text = test.strung("Number {num} {nope}");  
 //!     assert_eq!(&text,"Number 1 {nope}");
 //! 
 //!     /* ------------------------- Unnamed Fields (Tuple) ------------------------- */
-//!     let test = TestTup(1,CustomField(0),":)");      // Create struct as usual
-//!     let text = test.strung("Number {0} {1} {2}");   // 🌱 {1} not available!
+//!     // Create struct as usual
+//!     let test = TestTup(1,CustomField(0),":)");    
+//!     // {1} not available!  
+//!     let text = test.strung("Number {0} {1} {2}");   
 //!     assert_eq!(&text,"Number 1 {1} :)");
 //! }
 //! ```
@@ -185,15 +198,15 @@
 //! There's also the possibility of cascading. e.g.: `$field.0.num`, it's experimentally implemented for [Strung::strung_dollar] and [Strung::strung_hashtag] at the moment,
 //! cause it was the easiest to do. 🦀
 //! 
-//! For this to work, the field-type has to derive [Strung] via derive macro and mark it with the `#[strung(cascade)]` attribute:
+//! For this to work, the field-type has to derive [Strung] via derive macro and mark it with the `#[cascade]`, `#[cscd]` attribute or `#[strung(cascade)]`, `#[strung(cscd)]` in more specific use cases:
 //! ```
 //! use strung::prelude::*;
 //! 
 //! // #[strung(ignore)] just because none of them are implementing Display!
-//! #[derive(Strung)] struct A {#[strung(cascade,ignore)]field:B}
-//! #[derive(Strung)] struct B (u32,#[strung(cascade,ignore)]C);
-//! #[derive(Strung)] struct C {#[strung(cascade,ignore)]field:D,num:u32}
-//! #[derive(Strung)] struct D (#[strung(cascade,ignore)]E);
+//! #[derive(Strung)] struct A {#[cscd]field:B}
+//! #[derive(Strung)] struct B (u32,#[cascade]C);
+//! #[derive(Strung)] struct C {#[strung(cascade)]field:D,num:u32}
+//! #[derive(Strung)] struct D (#[strung(cscd)]E);
 //! #[derive(Strung)] struct E {num:u32}
 //! 
 //! fn main(){
