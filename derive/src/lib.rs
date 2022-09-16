@@ -157,7 +157,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
             _ => {},
         }
         let gen = quote! {
-            impl #impl_generics ::strung::Strung for #name #ty_generics #where_clause {
+            impl #impl_generics Strung for #name #ty_generics #where_clause {
                 fn strung(&self, text: &str) -> String {
                     let mut output = text.to_string();
                     #(output = output.replace(&#fnames,&self.#idents.to_string());)*
