@@ -1,4 +1,5 @@
 # v0.1.3 (2022-09-16)
+* 🧹 derive: clean up a lil
 * 🐛 derive: fix macro to be re-exportable
 * 📝 changelog: change wording
 
