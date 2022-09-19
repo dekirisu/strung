@@ -1,8 +1,21 @@
-![Header](https://user-images.githubusercontent.com/78398528/191016465-d876fa2b-2714-4536-bbac-09e11e604960.gif)<br>
-[![GitHub](https://img.shields.io/badge/github-dekirisu/strung-ee6677)](https://github.com/dekirisu/strung)
-[![Version](https://img.shields.io/crates/v/strung)](https://crates.io/crates/strung)
-[![Docs](https://img.shields.io/docsrs/strung)](https://docs.rs/strung)
-[![Discord](https://img.shields.io/discord/515100001903312898)](https://discord.gg/kevWvBuPFg)
+<p align="center">
+<img src="https://user-images.githubusercontent.com/78398528/191016465-d876fa2b-2714-4536-bbac-09e11e604960.gif">
+</p>
+<p align="center">
+    <a href="https://github.com/dekirisu/strung" style="position:relative">
+        <img src="https://img.shields.io/badge/github-dekirisu/strung-ee6677">
+    </a>
+    <a href="https://crates.io/crates/strung" style="position:relative">
+        <img src="https://img.shields.io/crates/v/strung">
+    </a>
+    <a href="https://docs.rs/strung" style="position:relative">
+        <img src="https://img.shields.io/docsrs/strung">
+    </a>
+    <a href="https://discord.gg/kevWvBuPFg" style="position:relative">
+        <img src="https://img.shields.io/discord/515100001903312898">
+    </a>
+</p>
+
 ## Easy access to struct fields in strings
 🐠 add strung to the dependencies in the `Cargo.toml`:
 ```toml
