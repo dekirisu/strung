@@ -11,6 +11,7 @@
 * 📝 remove license badge
 * 📝 rewrite all
 * 🦀 use animal emojis for fun!
+* 🎨 add animated header for fun!
 ### Other
 * 📝 changelog: change wording & use titles
 # v0.1.2 (2022-09-14)

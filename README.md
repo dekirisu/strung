@@ -1,4 +1,4 @@
-
+![Header](https://user-images.githubusercontent.com/78398528/191016465-d876fa2b-2714-4536-bbac-09e11e604960.gif)<br>
 [![GitHub](https://img.shields.io/badge/github-dekirisu/strung-ee6677)](https://github.com/dekirisu/strung)
 [![Version](https://img.shields.io/crates/v/strung)](https://crates.io/crates/strung)
 [![Docs](https://img.shields.io/docsrs/strung)](https://docs.rs/strung)
