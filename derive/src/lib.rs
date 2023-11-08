@@ -3,6 +3,19 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{*, punctuated::Punctuated};
 
+trait IntuplePath {
+    fn get_option (&self) -> Option<&'static str>;
+}
+impl IntuplePath for Path {
+    fn get_option (&self) -> Option<&'static str> {
+        if self.is_ident("ignore") || self.is_ident("igno") {
+            Some("ignore")
+        } else if self.is_ident("recursive") || self.is_ident("rcsv") {
+            Some("recursive")
+        } else {None}
+    }
+}
+
 /// THE proc-macro, generating needed functions!
 #[proc_macro_derive(Strung, attributes(strung,cascade,igno,cscd))]
 pub fn strung_macro_derive(input: TokenStream) -> TokenStream {
@@ -55,22 +68,17 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                     
                     let mut ignore = false;
                     for attr in &field.attrs {
-
-                        let ewr = attr.path().get_ident();
-                        let nme = ewr.as_ref().unwrap().to_string();
-                        /* ----------------------------- #[ignore/igno] ----------------------------- */
-                        if &nme == "ignore" || &nme == "igno" {
-                            ignore = true;
+                        match attr.path().get_option() {
+                            Some("ignore") => ignore = true,
+                            Some("cascade") => {
+                                cscd_idents.0.push(f_ident.clone());
+                                cscd_strs_dollar.0.push(format!("${}.",&f_name));
+                                cscd_strs_hashtag.0.push(format!("#{}.",&f_name));
+                                ignore = true;
+                            },
+                            _ => {}
                         }
-                        /* ----------------------------- #[cascade/cscd] ---------------------------- */
-                        if &nme == "cascade" || &nme == "cscd" {
-                            cscd_idents.0.push(f_ident.clone());
-                            cscd_strs_dollar.0.push(format!("${}.",&f_name));
-                            cscd_strs_hashtag.0.push(format!("#{}.",&f_name));
-                            ignore = true;
-                        }
-                        /* ----------------------------- #[strung(...)] ----------------------------- */
-                        else if &nme == "strung" {
+                        if attr.path().is_ident("strung") {
                             if let Ok(list) = attr.meta.require_list(){
                                 list.parse_nested_meta(|meta|{
                                     let nident = meta.path.get_ident().as_ref().unwrap().to_string();
@@ -87,10 +95,6 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                                     Ok(())
                                 }).unwrap();
                             }
-                        }
-                        /* ----------------------------- #[notice/notc] ----------------------------- */
-                        if &nme == "notice" || &nme == "notc" {
-                            ignore = false;
                         }
                     }
                     if ignore {continue;}
@@ -113,21 +117,18 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                 for field in &fields.unnamed {
                     let mut ignore = false;
                     for attr in &field.attrs {
-                        let ewr = attr.path().get_ident();
-                        let nme = ewr.as_ref().unwrap().to_string();
-                        /* ----------------------------- #[ignore/igno] ----------------------------- */
-                        if &nme == "ignore" || &nme == "igno" {
-                            ignore = true;
-                        }
-                        /* ----------------------------- #[cascade/cscd] ---------------------------- */
-                        if &nme == "cascade" || &nme == "cscd" {
-                            cscd_idents.1.push(Index::from(i));
-                            cscd_strs_dollar.1.push(format!("${}.",i));
-                            cscd_strs_hashtag.1.push(format!("#{}.",i));
-                            ignore = true;
+                        match attr.path().get_option() {
+                            Some("ignore") => ignore = true,
+                            Some("cascade") => {
+                                cscd_idents.1.push(Index::from(i));
+                                cscd_strs_dollar.1.push(format!("${}.",i));
+                                cscd_strs_hashtag.1.push(format!("#{}.",i));
+                                ignore = true;
+                            },
+                            _ => {}
                         }
                         /* ----------------------------- #[strung(...)] ----------------------------- */
-                        if &nme == "strung" {
+                        if attr.path().is_ident("strung") {
                             if let Ok(list) = attr.meta.require_list(){
                                 list.parse_nested_meta(|meta|{
                                     let nident = meta.path.get_ident().as_ref().unwrap().to_string();
@@ -138,16 +139,10 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                                         ignore = true;
                                     } else if &nident == "ignore" || &nident == "igno" {
                                         ignore = true;
-                                    } else if &nident == "notice" || &nident == "notc" {
-                                        ignore = false;
                                     }
                                     Ok(())
                                 }).unwrap();
                             }                           
-                        }
-                        /* ----------------------------- #[notice/notc] ----------------------------- */
-                        if &nme == "notice" || &nme == "notc" {
-                            ignore = false;
                         }
                     }
                     if !ignore {
