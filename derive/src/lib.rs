@@ -1,15 +1,16 @@
 /// Proc macro for strung!  
 use proc_macro::TokenStream;
 use quote::quote;
+use syn::*;
 
 /// THE proc-macro, generating needed functions!
 #[proc_macro_derive(Strung, attributes(strung,cascade,igno,cscd))]
 pub fn strung_macro_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).unwrap();
+    let ast = parse(input).unwrap();
     impl_strung_macro(&ast)
 }
 
-fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
+fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let (impl_generics, ty_generics, where_clause) = &ast.generics.split_for_impl();
 
@@ -18,11 +19,11 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
         let ewr = aaa.path.get_ident();
         if &ewr.as_ref().unwrap().to_string() == "strung" {
             if let Ok(bbb) = aaa.parse_meta() {
-                if let syn::Meta::List(list) = bbb {
+                if let Meta::List(list) = bbb {
                     let mut i = 0;
                     for abc in list.nested {
-                        if let  syn::NestedMeta::Lit(lit) = abc {
-                            if let syn::Lit::Str(string) = lit {
+                        if let  NestedMeta::Lit(lit) = abc {
+                            if let Lit::Str(string) = lit {
                                 if i==0 {pre = string.value();}
                                 else {post = string.value();}
                             }
@@ -34,7 +35,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
             }
         }
     }
-    if let syn::Data::Struct(strct) = &ast.data {
+    if let Data::Struct(strct) = &ast.data {
 
         let mut idents       = (vec![], vec![]);
         let mut strs_main    = (vec![], vec![]);
@@ -50,7 +51,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
         let mut cscd_strs_hashtag = (vec![], vec![]);
 
         match &strct.fields {
-            syn::Fields::Named(fields) => {
+            Fields::Named(fields) => {
                 for field in &fields.named {
 
                     let f_ident = field.ident.as_ref().unwrap().clone();
@@ -74,10 +75,10 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
                         /* ----------------------------- #[strung(...)] ----------------------------- */
                         else if &nme == "strung" {
                             if let Ok(bbb) = aaa.parse_meta() {
-                                if let syn::Meta::List(list) = bbb {
+                                if let Meta::List(list) = bbb {
                                     for abc in list.nested {
-                                        if let syn::NestedMeta::Meta(meta) = abc {
-                                            if let syn::Meta::Path(pp) = meta {
+                                        if let NestedMeta::Meta(meta) = abc {
+                                            if let Meta::Path(pp) = meta {
                                                 let nident = pp.get_ident().as_ref().unwrap().to_string();
                                                 if &nident == "cascade" || &nident == "cscd" {
                                                     cscd_idents.0.push(f_ident.clone());
@@ -115,7 +116,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
                     strs_raw.0.push(f_name.clone());
                 }
             },
-            syn::Fields::Unnamed(fields) => {
+            Fields::Unnamed(fields) => {
                 let mut i = 0;
                 for field in &fields.unnamed {
                     let mut ignore = false;
@@ -128,7 +129,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
                         }
                         /* ----------------------------- #[cascade/cscd] ---------------------------- */
                         if &nme == "cascade" || &nme == "cscd" {
-                            cscd_idents.1.push(syn::Index::from(i));
+                            cscd_idents.1.push(Index::from(i));
                             cscd_strs_dollar.1.push(format!("${}.",i));
                             cscd_strs_hashtag.1.push(format!("#{}.",i));
                             ignore = true;
@@ -136,13 +137,13 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
                         /* ----------------------------- #[strung(...)] ----------------------------- */
                         if &nme == "strung" {
                             if let Ok(bbb) = aaa.parse_meta() {
-                                if let syn::Meta::List(list) = bbb {
+                                if let Meta::List(list) = bbb {
                                     for abc in list.nested {
-                                        if let syn::NestedMeta::Meta(meta) = abc {
-                                            if let syn::Meta::Path(pp) = meta {
+                                        if let NestedMeta::Meta(meta) = abc {
+                                            if let Meta::Path(pp) = meta {
                                                 let nident = pp.get_ident().as_ref().unwrap().to_string();
                                                 if &nident == "cascade" || &nident == "cscd" {
-                                                    cscd_idents.1.push(syn::Index::from(i));
+                                                    cscd_idents.1.push(Index::from(i));
                                                     cscd_strs_dollar.1.push(format!("${}.",i));
                                                     cscd_strs_hashtag.1.push(format!("#{}.",i));
                                                     ignore = true;
@@ -164,7 +165,7 @@ fn impl_strung_macro(ast: &syn::DeriveInput) -> TokenStream {
                     }
                     if !ignore {
 
-                        idents.1.push(syn::Index::from(i));
+                        idents.1.push(Index::from(i));
                         strs_main.1.push(format!("{}{}{}",&pre,i,&post));
 
                         strs_curly.1.push(format!("{{{}}}",i));
