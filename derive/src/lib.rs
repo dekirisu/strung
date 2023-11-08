@@ -3,18 +3,58 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn::{*, punctuated::Punctuated};
 
-trait IntuplePath {
-    fn get_option (&self) -> Option<&'static str>;
-}
-impl IntuplePath for Path {
-    fn get_option (&self) -> Option<&'static str> {
-        if self.is_ident("ignore") || self.is_ident("igno") {
-            Some("ignore")
-        } else if self.is_ident("recursive") || self.is_ident("rcsv") {
-            Some("recursive")
-        } else {None}
+/* ---------------------------------- Core ---------------------------------- */
+
+    trait IntuplePath {
+        fn get_option (&self) -> Option<&'static str>;
     }
-}
+    impl IntuplePath for Path {
+        fn get_option (&self) -> Option<&'static str> {
+            if self.is_ident("ignore") || self.is_ident("igno") {
+                Some("ignore")
+            } else if self.is_ident("cascade") || self.is_ident("cscd") {
+                Some("cascade")
+            } else {None}
+        }
+    }
+
+    trait IntupleAttributes {
+        fn as_strings(&self) -> Vec<&'static str>;
+    }
+    impl IntupleAttributes for Vec<Attribute> {
+        fn as_strings(&self) -> Vec<&'static str> {
+            let mut names = vec![];
+            for attr in self {
+                if let Some(path) = attr.meta.path().get_option() {
+                    names.push(path);
+                }
+                if attr.meta.path().is_ident("strung") {
+                    attr.parse_nested_meta(|meta|{
+                        if let Some(path) = meta.path.get_option() {
+                            names.push(path);
+                        }
+                        Ok(())
+                    }).unwrap();
+                }
+            }
+            names
+        }
+    } 
+
+    trait IntupleField {
+        fn cascade(&self) -> bool;
+        fn ignored(&self) -> bool;
+    }
+    impl IntupleField for Field {
+        fn cascade(&self) -> bool {
+            self.attrs.as_strings().contains(&"cascade")
+        }
+        fn ignored(&self) -> bool {
+            self.attrs.as_strings().contains(&"ignore")
+        }
+    }
+
+/* --------------------------------- Derive --------------------------------- */
 
 /// THE proc-macro, generating needed functions!
 #[proc_macro_derive(Strung, attributes(strung,cascade,igno,cscd))]
@@ -66,38 +106,13 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                     let f_ident = field.ident.as_ref().unwrap().clone();
                     let f_name = field.ident.as_ref().unwrap().to_string();
                     
-                    let mut ignore = false;
-                    for attr in &field.attrs {
-                        match attr.path().get_option() {
-                            Some("ignore") => ignore = true,
-                            Some("cascade") => {
-                                cscd_idents.0.push(f_ident.clone());
-                                cscd_strs_dollar.0.push(format!("${}.",&f_name));
-                                cscd_strs_hashtag.0.push(format!("#{}.",&f_name));
-                                ignore = true;
-                            },
-                            _ => {}
-                        }
-                        if attr.path().is_ident("strung") {
-                            if let Ok(list) = attr.meta.require_list(){
-                                list.parse_nested_meta(|meta|{
-                                    let nident = meta.path.get_ident().as_ref().unwrap().to_string();
-                                    if &nident == "cascade" || &nident == "cscd" {
-                                        cscd_idents.0.push(f_ident.clone());
-                                        cscd_strs_dollar.0.push(format!("${}.",&f_name));
-                                        cscd_strs_hashtag.0.push(format!("#{}.",&f_name));
-                                        ignore = true;
-                                    } else if &nident == "ignore" || &nident == "igno" {
-                                        ignore = true;
-                                    } else if &nident == "notice" || &nident == "notc" {
-                                        ignore = false;
-                                    }
-                                    Ok(())
-                                }).unwrap();
-                            }
-                        }
+                    if field.cascade() {
+                        cscd_idents.0.push(f_ident.clone());
+                        cscd_strs_dollar.0.push(format!("${}.",&f_name));
+                        cscd_strs_hashtag.0.push(format!("#{}.",&f_name));
+                        continue;
                     }
-                    if ignore {continue;}
+                    if field.ignored() {continue;}
 
                     idents.0.push(f_ident);
                     strs_main.0.push(format!("{}{}{}",&pre,&f_name,&post));
@@ -115,50 +130,27 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
             Fields::Unnamed(fields) => {
                 let mut i = 0;
                 for field in &fields.unnamed {
-                    let mut ignore = false;
-                    for attr in &field.attrs {
-                        match attr.path().get_option() {
-                            Some("ignore") => ignore = true,
-                            Some("cascade") => {
-                                cscd_idents.1.push(Index::from(i));
-                                cscd_strs_dollar.1.push(format!("${}.",i));
-                                cscd_strs_hashtag.1.push(format!("#{}.",i));
-                                ignore = true;
-                            },
-                            _ => {}
-                        }
-                        /* ----------------------------- #[strung(...)] ----------------------------- */
-                        if attr.path().is_ident("strung") {
-                            if let Ok(list) = attr.meta.require_list(){
-                                list.parse_nested_meta(|meta|{
-                                    let nident = meta.path.get_ident().as_ref().unwrap().to_string();
-                                    if &nident == "cascade" || &nident == "cscd" {
-                                        cscd_idents.1.push(Index::from(i));
-                                        cscd_strs_dollar.1.push(format!("${}.",i));
-                                        cscd_strs_hashtag.1.push(format!("#{}.",i));
-                                        ignore = true;
-                                    } else if &nident == "ignore" || &nident == "igno" {
-                                        ignore = true;
-                                    }
-                                    Ok(())
-                                }).unwrap();
-                            }                           
-                        }
+
+                    if field.cascade() {
+                        cscd_idents.1.push(Index::from(i));
+                        cscd_strs_dollar.1.push(format!("${}.",i));
+                        cscd_strs_hashtag.1.push(format!("#{}.",i));
+                        continue;
                     }
-                    if !ignore {
+                    if field.ignored() {continue;}
 
-                        idents.1.push(Index::from(i));
-                        strs_main.1.push(format!("{}{}{}",&pre,i,&post));
+                    idents.1.push(Index::from(i));
+                    strs_main.1.push(format!("{}{}{}",&pre,i,&post));
 
-                        strs_curly.1.push(format!("{{{}}}",i));
-                        strs_dollry.1.push(format!("${{{}}}",i));
-                        strs_angle.1.push(format!("<{}>",i));
+                    strs_curly.1.push(format!("{{{}}}",i));
+                    strs_dollry.1.push(format!("${{{}}}",i));
+                    strs_angle.1.push(format!("<{}>",i));
 
-                        strs_dollar.1.push(format!("${}",i));
-                        strs_hashtag.1.push(format!("#{}",i));
+                    strs_dollar.1.push(format!("${}",i));
+                    strs_hashtag.1.push(format!("#{}",i));
 
-                        strs_raw.1.push(i.to_string());
-                    }
+                    strs_raw.1.push(i.to_string());
+                    
                     i += 1;
                 }
             },
