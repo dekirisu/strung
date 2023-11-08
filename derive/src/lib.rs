@@ -1,7 +1,7 @@
 /// Proc macro for strung!  
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::*;
+use syn::{*, punctuated::Punctuated};
 
 /// THE proc-macro, generating needed functions!
 #[proc_macro_derive(Strung, attributes(strung,cascade,igno,cscd))]
@@ -15,26 +15,22 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = &ast.generics.split_for_impl();
 
     let (mut pre, mut post) = ("{".to_string(),"}".to_string());
-    for aaa in &ast.attrs {
-        let ewr = aaa.path.get_ident();
+    for attr in &ast.attrs {
+        let ewr = attr.path().get_ident();
         if &ewr.as_ref().unwrap().to_string() == "strung" {
-            if let Ok(bbb) = aaa.parse_meta() {
-                if let Meta::List(list) = bbb {
-                    let mut i = 0;
-                    for abc in list.nested {
-                        if let  NestedMeta::Lit(lit) = abc {
-                            if let Lit::Str(string) = lit {
-                                if i==0 {pre = string.value();}
-                                else {post = string.value();}
-                            }
-                        }
-                        i += 1;
-                        if i==2 {break;}
-                    }
+            if let Ok(list) = attr.meta.require_list(){
+                let mut i = 0;
+                let lit = list.parse_args_with(Punctuated::<LitStr, Token![,]>::parse_terminated).unwrap();
+                for value in lit {
+                    if i==0 {pre = value.value();}
+                    else {post = value.value();}
+                    i += 1;
+                    if i==2 {continue;}
                 }
             }
         }
     }
+
     if let Data::Struct(strct) = &ast.data {
 
         let mut idents       = (vec![], vec![]);
@@ -58,8 +54,9 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                     let f_name = field.ident.as_ref().unwrap().to_string();
                     
                     let mut ignore = false;
-                    for aaa in &field.attrs {
-                        let ewr = aaa.path.get_ident();
+                    for attr in &field.attrs {
+
+                        let ewr = attr.path().get_ident();
                         let nme = ewr.as_ref().unwrap().to_string();
                         /* ----------------------------- #[ignore/igno] ----------------------------- */
                         if &nme == "ignore" || &nme == "igno" {
@@ -74,26 +71,21 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                         }
                         /* ----------------------------- #[strung(...)] ----------------------------- */
                         else if &nme == "strung" {
-                            if let Ok(bbb) = aaa.parse_meta() {
-                                if let Meta::List(list) = bbb {
-                                    for abc in list.nested {
-                                        if let NestedMeta::Meta(meta) = abc {
-                                            if let Meta::Path(pp) = meta {
-                                                let nident = pp.get_ident().as_ref().unwrap().to_string();
-                                                if &nident == "cascade" || &nident == "cscd" {
-                                                    cscd_idents.0.push(f_ident.clone());
-                                                    cscd_strs_dollar.0.push(format!("${}.",&f_name));
-                                                    cscd_strs_hashtag.0.push(format!("#{}.",&f_name));
-                                                    ignore = true;
-                                                } else if &nident == "ignore" || &nident == "igno" {
-                                                    ignore = true;
-                                                } else if &nident == "notice" || &nident == "notc" {
-                                                    ignore = false;
-                                                }
-                                            }
-                                        }
+                            if let Ok(list) = attr.meta.require_list(){
+                                list.parse_nested_meta(|meta|{
+                                    let nident = meta.path.get_ident().as_ref().unwrap().to_string();
+                                    if &nident == "cascade" || &nident == "cscd" {
+                                        cscd_idents.0.push(f_ident.clone());
+                                        cscd_strs_dollar.0.push(format!("${}.",&f_name));
+                                        cscd_strs_hashtag.0.push(format!("#{}.",&f_name));
+                                        ignore = true;
+                                    } else if &nident == "ignore" || &nident == "igno" {
+                                        ignore = true;
+                                    } else if &nident == "notice" || &nident == "notc" {
+                                        ignore = false;
                                     }
-                                }
+                                    Ok(())
+                                }).unwrap();
                             }
                         }
                         /* ----------------------------- #[notice/notc] ----------------------------- */
@@ -120,8 +112,8 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                 let mut i = 0;
                 for field in &fields.unnamed {
                     let mut ignore = false;
-                    for aaa in &field.attrs {
-                        let ewr = aaa.path.get_ident();
+                    for attr in &field.attrs {
+                        let ewr = attr.path().get_ident();
                         let nme = ewr.as_ref().unwrap().to_string();
                         /* ----------------------------- #[ignore/igno] ----------------------------- */
                         if &nme == "ignore" || &nme == "igno" {
@@ -136,27 +128,22 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                         }
                         /* ----------------------------- #[strung(...)] ----------------------------- */
                         if &nme == "strung" {
-                            if let Ok(bbb) = aaa.parse_meta() {
-                                if let Meta::List(list) = bbb {
-                                    for abc in list.nested {
-                                        if let NestedMeta::Meta(meta) = abc {
-                                            if let Meta::Path(pp) = meta {
-                                                let nident = pp.get_ident().as_ref().unwrap().to_string();
-                                                if &nident == "cascade" || &nident == "cscd" {
-                                                    cscd_idents.1.push(Index::from(i));
-                                                    cscd_strs_dollar.1.push(format!("${}.",i));
-                                                    cscd_strs_hashtag.1.push(format!("#{}.",i));
-                                                    ignore = true;
-                                                } else if &nident == "ignore" || &nident == "igno" {
-                                                    ignore = true;
-                                                } else if &nident == "notice" || &nident == "notc" {
-                                                    ignore = false;
-                                                }
-                                            }
-                                        }
+                            if let Ok(list) = attr.meta.require_list(){
+                                list.parse_nested_meta(|meta|{
+                                    let nident = meta.path.get_ident().as_ref().unwrap().to_string();
+                                    if &nident == "cascade" || &nident == "cscd" {
+                                        cscd_idents.1.push(Index::from(i));
+                                        cscd_strs_dollar.1.push(format!("${}.",i));
+                                        cscd_strs_hashtag.1.push(format!("#{}.",i));
+                                        ignore = true;
+                                    } else if &nident == "ignore" || &nident == "igno" {
+                                        ignore = true;
+                                    } else if &nident == "notice" || &nident == "notc" {
+                                        ignore = false;
                                     }
-                                }
-                            }                            
+                                    Ok(())
+                                }).unwrap();
+                            }                           
                         }
                         /* ----------------------------- #[notice/notc] ----------------------------- */
                         if &nme == "notice" || &nme == "notc" {
