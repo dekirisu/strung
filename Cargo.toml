@@ -19,3 +19,10 @@ strung_derive = {path="./derive"}
 
 [features]
 default = ["dep:strung_derive"]
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "performance"
+harness = false
