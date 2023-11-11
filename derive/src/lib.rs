@@ -99,59 +99,32 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
         let mut cscd_strs_dollar  = vec![];
         let mut cscd_strs_hashtag = vec![];
 
-        match &strct.fields {
-            Fields::Named(fields) => {
-                for field in &fields.named {
+        for (position,field) in strct.fields.iter().enumerate() {
+            
+            let f_ident = match &field.ident {
+                Some(id) => id.to_token_stream(),
+                None => Index::from(position).to_token_stream(),
+            };
+            if field.cascade() {
+                cscd_idents.push(f_ident.clone());
+                cscd_strs_dollar.push(format!("${}.",&f_ident));
+                cscd_strs_hashtag.push(format!("#{}.",&f_ident));
+                continue;
+            }
+            if field.ignored() {continue;}
 
-                    let f_ident = field.ident.as_ref().unwrap().clone();
-                    let f_name = field.ident.as_ref().unwrap().to_string();
-                    
-                    if field.cascade() {
-                        cscd_idents.push(f_ident.to_token_stream());
-                        cscd_strs_dollar.push(format!("${}.",&f_name));
-                        cscd_strs_hashtag.push(format!("#{}.",&f_name));
-                        continue;
-                    }
-                    if field.ignored() {continue;}
+            strs_main.push(format!("{}{}{}",&pre,&f_ident,&post));
 
-                    idents.push(f_ident.to_token_stream());
-                    strs_main.push(format!("{}{}{}",&pre,&f_name,&post));
+            strs_curly.push(format!("{{{}}}",&f_ident,));
+            strs_dollry.push(format!("${{{}}}",&f_ident));
+            strs_angle.push(format!("<{}>",&f_ident,));
 
-                    strs_curly.push(format!("{{{}}}",&f_name,));
-                    strs_dollry.push(format!("${{{}}}",&f_name));
-                    strs_angle.push(format!("<{}>",&f_name,));
+            strs_dollar.push(format!("${}",&f_ident));
+            strs_hashtag.push(format!("#{}",&f_ident));
+            
+            idents.push(f_ident.clone());
+            strs_raw.push(f_ident);
 
-                    strs_dollar.push(format!("${}",&f_name));
-                    strs_hashtag.push(format!("#{}",&f_name));
-                    
-                    strs_raw.push(f_name.clone());
-                }
-            },
-            Fields::Unnamed(fields) => {
-                for (i,field) in fields.unnamed.iter().enumerate() {
-
-                    if field.cascade() {
-                        cscd_idents.push(Index::from(i).to_token_stream());
-                        cscd_strs_dollar.push(format!("${}.",i));
-                        cscd_strs_hashtag.push(format!("#{}.",i));
-                        continue;
-                    }
-                    if field.ignored() {continue;}
-
-                    idents.push(Index::from(i).to_token_stream());
-                    strs_main.push(format!("{}{}{}",&pre,i,&post));
-
-                    strs_curly.push(format!("{{{}}}",i));
-                    strs_dollry.push(format!("${{{}}}",i));
-                    strs_angle.push(format!("<{}>",i));
-
-                    strs_dollar.push(format!("${}",i));
-                    strs_hashtag.push(format!("#{}",i));
-
-                    strs_raw.push(i.to_string());
-                }
-            },
-            _ => {},
         }
 
         macro_rules! prefab {
@@ -199,12 +172,12 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
 
                 fn strung_static(&self, text: &str) -> String {
                     let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},&#strs_raw,unsafe{STRUNG_POST}),&self.#idents.to_string());)*
+                    #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},stringify!(#strs_raw),unsafe{STRUNG_POST}),&self.#idents.to_string());)*
                     output
                 }
                 fn strung_dynamic(&self, pre: &str, post:&str, text: &str) -> String {
                     let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",pre,&#strs_raw,post),&self.#idents.to_string());)*
+                    #(output = output.replace(&format!("{}{}{}",pre,stringify!(#strs_raw),post),&self.#idents.to_string());)*
                     output
                 }
 
