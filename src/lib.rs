@@ -247,6 +247,8 @@ pub trait Strung {
     fn strung_static(&self, _text: &str) -> String {todo!()}
     /// Replacement with custom inline Postfixes and Prefixes
     fn strung_dynamic(&self, _pre: &str, _post:&str, _text: &str) -> String {todo!()}
+    /// Replacement with custom generic constant char Postfixes and Prefixes
+    fn strung_generic <const A:char,const Z:char>(&self, _text: &str) -> String {todo!()}
     /// Same as [Strung::strung] but not changable and always addressable by `{field_name}`
     fn strung_curly(&self, _text: &str) -> String {todo!()}
     /// Same as [Strung::strung] but not changable and always addressable by `$field_name`
@@ -270,6 +272,7 @@ impl Strung for StrungUnit {
     fn strung_dollry(&self, text: &str)     -> String {text.into()}
     fn strung_hashtag(&self, text: &str)    -> String {text.into()}
     fn strung_angle(&self, text: &str)      -> String {text.into()}
+    fn strung_generic <const STRUNG_PRE:char,const STRUNG_POST:char>(&self, text: &str) -> String {text.into()}
 }
 
 pub mod config {

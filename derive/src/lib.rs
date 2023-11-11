@@ -198,6 +198,16 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                     output
                 }
 
+                fn strung_generic <const STRUNG_PRE:char,const STRUNG_POST:char> (&self, text: &str) -> String {
+                    let pre = STRUNG_PRE.to_string();
+                    let post = STRUNG_POST.to_string();
+                    let mut output = text.to_string();
+                    #(output = output.replace(&format!("{}{}{}",&pre,stringify!(#idents),post),&self.#idents.to_string());)*
+                    #(output = output.replace(&format!("{}{}.",&pre,stringify!(#cscd_idents)),&pre);)*
+                    #(output = self.#cscd_idents.strung_dynamic(&pre,&post,&output);)*
+                    output
+                }
+
             }
         };
         gen.into()

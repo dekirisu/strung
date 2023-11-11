@@ -137,4 +137,12 @@ fn main(){
     let text = CASCADE.strung_static("+tup.0++tup.1+");
     println!("strung_static cascading: {}",&text);
 
+    // most flexible - using generic const chars
+    let text = NAMED.strung_generic::<'<','>'>("<num><name>");
+    println!("strung_generic: {}",&text);
+
+    // most flexible - using generic const chars
+    let text = CASCADE.strung_generic::<'<','>'>("<tup.0><tup.1>");
+    println!("strung_generic cascading: {}",&text);
+
 }
