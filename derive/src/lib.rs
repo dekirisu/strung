@@ -155,9 +155,9 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
         }
 
         macro_rules! prefab {
-            ($name:ident, $idents:expr, $strs:expr) => {{ 
+            ($name:ident, $strs:expr) => {{ 
                 let strs = $strs;
-                let (id_nmd, id_unmd) = &$idents;
+                let (id_nmd, id_unmd) = &idents;
                 quote! {
                 fn $name(&self, text: &str) -> String {
                     let mut output = text.to_string();
@@ -166,10 +166,10 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                     output
                 }
             }}};
-            ($litaf:expr, $name:ident, $idents:expr, $strs:expr, $cscd_idents:expr, $cscd_strs:expr) => {{ 
+            ($litaf:expr, $name:ident, $strs:expr, $cscd_strs:expr) => {{ 
                 let strs = $strs;
-                let (id_nmd, id_unmd) = &$idents;
-                let (cid_nmd, cid_unmd) = &$cscd_idents;
+                let (id_nmd, id_unmd) = &idents;
+                let (cid_nmd, cid_unmd) = &cscd_idents;
                 let cstrs = &$cscd_strs;
                 quote! {
                 fn $name(&self, text: &str) -> String {
@@ -184,13 +184,13 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
             }}}
         }
 
-        let strung          = prefab!(strung,        idents, strs_main   );
-        let strung_curly    = prefab!(strung_curly,  idents, strs_curly  );
-        let strung_angle    = prefab!(strung_angle,  idents, strs_angle  );
-        let strung_dollry   = prefab!(strung_dollry, idents, strs_dollry );
+        let strung          = prefab!(strung,        strs_main   );
+        let strung_curly    = prefab!(strung_curly,  strs_curly  );
+        let strung_angle    = prefab!(strung_angle,  strs_angle  );
+        let strung_dollry   = prefab!(strung_dollry, strs_dollry );
 
-        let strung_dollar   = prefab!("$",strung_dollar,  idents, strs_dollar,  cscd_idents, cscd_strs_dollar);
-        let strung_hashtag  = prefab!("#",strung_hashtag, idents, strs_hashtag, cscd_idents, cscd_strs_hashtag);
+        let strung_dollar   = prefab!("$",strung_dollar,  strs_dollar,  cscd_strs_dollar);
+        let strung_hashtag  = prefab!("#",strung_hashtag, strs_hashtag, cscd_strs_hashtag);
 
         let (idents_0, idents_1) = idents;
 
