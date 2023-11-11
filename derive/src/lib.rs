@@ -14,7 +14,9 @@ use syn::{*, punctuated::Punctuated};
                 Some("ignore")
             } else if self.is_ident("cascade") || self.is_ident("cscd") {
                 Some("cascade")
-            } else {None}
+            } else if self.is_ident("notice") || self.is_ident("notc") {
+                Some("notice")
+            }else {None}
         }
     }
 
@@ -44,6 +46,7 @@ use syn::{*, punctuated::Punctuated};
     trait IntupleField {
         fn cascade(&self) -> bool;
         fn ignored(&self) -> bool;
+        fn notice(&self) -> bool;
     }
     impl IntupleField for Field {
         fn cascade(&self) -> bool {
@@ -51,6 +54,9 @@ use syn::{*, punctuated::Punctuated};
         }
         fn ignored(&self) -> bool {
             self.attrs.as_strings().contains(&"ignore")
+        }
+        fn notice(&self) -> bool {
+            self.attrs.as_strings().contains(&"notice")
         }
     }
 
@@ -131,9 +137,8 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                         cscd_strs_dollar.push(format!("${}.",&posid));
                         cscd_strs_hashtag.push(format!("#{}.",&posid));
                     }
-                    continue;
                 }
-                if field.ignored() {continue;}
+                if field.ignored() || field.cascade() && !field.notice() {continue;}
     
                 idents.push(ident.clone());
                 posids.push(posid.clone());

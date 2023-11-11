@@ -4,10 +4,10 @@
 use strung::prelude::*;
  
 // #[strung(ignore)] just because none of them are implementing Display!
-#[derive(Strung)] struct A {#[strung(cascade,ignore)]field:B}
-#[derive(Strung)] struct B (u32,#[strung(cascade,ignore)]C);
-#[derive(Strung)] struct C {#[strung(cascade,ignore)]field:D,num:u32}
-#[derive(Strung)] struct D (#[strung(cascade,ignore)]E);
+#[derive(Strung)] struct A {#[strung(cascade)]field:B}
+#[derive(Strung)] struct B (u32,#[strung(cascade)]C);
+#[derive(Strung)] struct C {#[strung(cascade)]field:D,num:u32}
+#[derive(Strung)] struct D (#[strung(cascade)]E);
 #[derive(Strung)] struct E {num:u32}
  
 fn main(){

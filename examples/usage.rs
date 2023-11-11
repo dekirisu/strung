@@ -29,7 +29,7 @@ struct TestCascade {
     // cascade: makes the fields of another Strung available
     // the ignore only affects the the struct itself, not its fields
     // and this would fail w/o it cause it doesn't implement it!
-    #[strung(cascade,ignore)]
+    #[strung(cascade)]
      tup: TestTup  
 }
  
