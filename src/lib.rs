@@ -235,7 +235,7 @@
 pub trait Strung {
     /// Default text replacement via `{field_name}`, changable via `#[strung("pre","post")]`
     /// This is the most efficient cause pre- anf postfixes are merged with the field-names on compilation time!
-    fn strung(&self, text: &str) -> String {todo!()}
+    fn strung(&self, _text: &str) -> String {todo!()}
     /// Replacement with custom static postfixes and prefixes
     /// - STRUNG_PRE for the prefix - Default: "$"
     /// - STRUNG_POST for the postfix - Default: ""
@@ -244,19 +244,19 @@ pub trait Strung {
     /// Easy changable:
     /// - File scope (shadowing): [config::static_on_file]
     /// - Global scope (mut): [config::static_global]
-    fn strung_static(&self, text: &str) -> String {todo!()}
+    fn strung_static(&self, _text: &str) -> String {todo!()}
     /// Replacement with custom inline Postfixes and Prefixes
-    fn strung_dynamic(&self, pre: &str, post:&str, text: &str) -> String {todo!()}
+    fn strung_dynamic(&self, _pre: &str, _post:&str, _text: &str) -> String {todo!()}
     /// Same as [Strung::strung] but not changable and always addressable by `{field_name}`
-    fn strung_curly(&self, text: &str) -> String {todo!()}
+    fn strung_curly(&self, _text: &str) -> String {todo!()}
     /// Same as [Strung::strung] but not changable and always addressable by `$field_name`
-    fn strung_dollar(&self, text: &str) -> String {todo!()}
+    fn strung_dollar(&self, _text: &str) -> String {todo!()}
     /// Same as [Strung::strung] but not changable and always addressable by `${field_name}`
-    fn strung_dollry(&self, text: &str) -> String {todo!()}
+    fn strung_dollry(&self, _text: &str) -> String {todo!()}
     /// Same as [Strung::strung] but not changable and always addressable by `#field_name`
-    fn strung_hashtag(&self, text: &str) -> String {todo!()}
+    fn strung_hashtag(&self, _text: &str) -> String {todo!()}
     /// Same as [Strung::strung] but not changable and always addressable by `<field_name>`
-    fn strung_angle(&self, text: &str) -> String {todo!()}
+    fn strung_angle(&self, _text: &str) -> String {todo!()}
 }
 
 /// Just an empty unit struct with Strung trait!
