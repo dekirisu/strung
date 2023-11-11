@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://user-images.githubusercontent.com/78398528/191016465-d876fa2b-2714-4536-bbac-09e11e604960.gif">
+<img src="https://user-images.githubusercontent.com/78398528/282229773-1b280573-6efd-4604-a739-320b4ceb6ef3.gif">
 </p>
 <p align="center">
     <a href="https://github.com/dekirisu/strung" style="position:relative">
@@ -20,7 +20,7 @@
 🐠 add strung to the dependencies in the `Cargo.toml`:
 ```toml
 [dependencies]
-strung = "0.1.3"
+strung = "0.1"
 ```
 🦀 use/import everything of the prelude in rust:
 ```rust 
@@ -43,10 +43,39 @@ struct Struct {
 }
 fn main(){
     let s: String = Struct{name:"Bob", pos:10}.strung("{name} is {pos}th."); 
+    // fields can also be addressed by their index
+    let z: String = Struct{name:"Bob", pos:10}.strung("{0} is {1}th."); 
+}
+```
+## Ignore 
+🐳 use `#[igno]`, `#[ignore]`,`#[strung(igno)]` or `#[strung(ignore)]` to make a field unavailable<br> 
+🦞 if a field type doesn't implement [Display](https://doc.rust-lang.org/std/fmt/trait.Display.html), it has to be ignored!
+```rust 
+struct NoDisplay;
+#[derive(Strung)]
+struct Struct (&'static str, u32, #[igno] NoDisplay);
+fn main(){
+    let s: String = Struct("Bob", 10, NoDisplay)
+        .strung("{0} is {1}th, he won {2}!"); 
+}
+```
+## Cascade
+🐳 use `#[cscd]`, `#[cascade]`, `#[strung(cscd)]` or `#[strung(cascade)]` to cascade (recursion).<br>
+🐑 cascaded fields are ignored by default <br>
+🐔 use `#[notice]`, `#[ntce]` or inside `#[strung(..)]` to make them available, 
+```rust 
+#[derive(Strung)]
+struct Struct &'static str, u32);
+#[derive(Strung)]
+struct Cascade (u32, #[cscd] Struct);
+fn main(){
+    let s: String = Cascade(11,Struct("Bob", 10))
+        .strung("{1.0} is {1.1}th for the {0}th time!"); 
+    // => Bob is 10th for the 11th time!
 }
 ```
 ## Prefix and Postix Prefabs
-🐎 prefabs are **most performant** - equal to `strung()`:
+🐈 5 different prefabs are provided:
 ```rust 
 #[derive(Strung)]
 struct Struct (&'static str, u32);
@@ -60,7 +89,17 @@ fn main(){
 }
 ```
 ## Custom Prefix and Postix
-🐎 **per struct** - performance equal to prefabs:
+🦊 you can also customize pre-/postfixes in different ways<br>
+🦅 **globally** - using static variables and `.strung_static(..)`:
+```rust 
+#[derive(Strung)]
+struct Struct (&'static str, u32);
+fn main(){
+    strung::set_static("<",">");
+    let s: String = Struct("Bob", 10).strung_static("<0> is <1>th."); 
+}
+```
+🐎 **per struct** - this overrides the default `.strung(..)` pre/postfix:
 ```rust 
 #[derive(Strung)]
 #[strung("<",">")]
@@ -69,16 +108,7 @@ fn main(){
     let s: String = Struct("Bob", 10).strung("<0> is <1>th."); 
 }
 ```
-🦅 **global** - easiest, a bit less performant:
-```rust 
-#[derive(Strung)]
-struct Struct (&'static str, u32);
-fn main(){
-    strung::config::static_global("<",">");
-    let s: String = Struct("Bob", 10).strung_static("<0> is <1>th."); 
-}
-```
-🐍 **per call** - most flexible:
+🐍 **per call** - using parameters `.strung_dynamic(pre,post,..)`:
 ```rust 
 #[derive(Strung)]
 struct Struct (&'static str, u32);
@@ -86,33 +116,22 @@ fn main(){
     let s: String = Struct("Bob", 10).strung_dynamic("<",">","<0> is <1>th."); 
 }
 ```
-## Cascade
-🦞 currently only for `dollar` and `hashtag` prefab! <br>
-🐳 use `#[cscd]`, `#[cascade]`, `#[strung(cscd)]` or `#[strung(cascade)]` on a field:
+🦎 **per call** - using generic const chars `.strung_generic::<pre,post>(..)`:
 ```rust 
 #[derive(Strung)]
 struct Struct (&'static str, u32);
-#[derive(Strung)]
-struct Cascade (u32, #[cscd] Struct);
 fn main(){
-    let s: String = Cascade(11,Struct("Bob", 10))
-        .strung_dollar("$1.0 is $1.1th for the $0th time!"); 
+    let s: String = Struct("Bob", 10).strung_generic::<'<','>'>("<0> is <1>th."); 
 }
 ```
-## Ignore
-🦞 if a field type doesn't implement [Display](https://doc.rust-lang.org/std/fmt/trait.Display.html), it has to be ignored! <br> 
-🐎 can also be used to gain minimal amounts of performance! <br>
-🐳 use `#[igno]`, `#[strung(igno)]` or `#[strung(ignore)]` on a field <br>
-🙉 this example wouldn't compile without `#[igno]`:
-```rust 
-struct NoDisplay;
-#[derive(Strung)]
-struct Struct (&'static str, u32, #[igno] NoDisplay);
-fn main(){
-    let s: String = Struct("Bob", 10, NoDisplay)
-        .strung_dollar("$0 is $1th, he won $2!"); 
-}
-```
+## Performance Comparison
+🐕 dynamic/generic/global have equal runtime speed<br>
+🐇 default/prefabs/per-struct are faster!<br>
+🐁 Using a string of ~650 chracters and 6 field placeholders:
+<p align="center">
+<img src="https://user-images.githubusercontent.com/78398528/282233001-d68aaac4-d419-44fa-bc3d-3ae62eb22fe4.svg">
+</p>
+
 ## More Information
 [🦕 Documentation](https://docs.rs/strung)<br>
 <a href="CHANGELOG.md">🦎 Changelog</a><br>

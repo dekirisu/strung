@@ -1,4 +1,11 @@
-# v0.1.3 (2022-09-XX)
+# v0.1.4 (2023-11-11)
+* 🐍 Code refactor for easier maintenance
+* 🐍 Strung trait methods are optional
+* 🐤 every method supports cascading (recursion)
+* 🐤 new method `strung_generic<PRE,POST>(text:&str)` accepting constant chars as pre/postfix
+* 🐤 `strung::set_static()` function to set static pre/postfix
+* 🐤 fields of named structs can be adressed by their index/position
+# v0.1.3 (2022-09-19)
 ### Derive Macro `./derive`
 * 🌟 add `#[cascade]`/`#[cscd]` and `#[igno]` as alternatives to the more specific, but longer `#[strung(cascade)]` and `#[strung(ignore)]`, also add `#[strung(igno)]`
 * 🎇 cascade now auto-ignores, cause it's common to use it in combination
