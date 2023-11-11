@@ -304,19 +304,26 @@ pub mod config {
     /// ```
     /// use strung::prelude::*;
     /// fn main(){
-    ///     strung::config::static_global("{","}");
+    ///     strung::set_static("{","}");
     ///     // ...
     /// }
     /// // ...
     /// ```
-    pub fn static_global(pre: &'static str, post: &'static str){
+    ///     
+    pub fn set_static(pre: &'static str, post: &'static str){
         unsafe {
             STRUNG_PRE = pre;
             STRUNG_POST = post;
         }
     }
+    /// alias for [set_static]
+    pub fn static_global(pre: &'static str, post: &'static str){
+        set_static(pre,post)
+    }
 
 }
+
+pub use config::set_static;
 
 pub mod prelude {
     //! All needed goods!

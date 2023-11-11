@@ -89,12 +89,12 @@ fn main(){
     println!("strung_dynamic: {}",&text);
  
     // also flexible - global static variables, you can easily change ...
-    strung::config::static_global("+","+");
+    strung::set_static("+","+");
     let text = NAMED.strung_static("+num++name+");
     println!("strung_static[1]: {}",&text);
  
     // ... whenever you want, but usually you'll just need it once at the start of the main
-    strung::config::static_global("[","]");
+    strung::set_static("[","]");
     let text = NAMED.strung_static("[num][name]");
     println!("strung_static[2]: {}",&text);
  
@@ -133,7 +133,7 @@ fn main(){
     println!("strung_dynamic cascading: {}",&text);
 
     // also flexible - global static variables, you can easily change ...
-    strung::config::static_global("+","+");
+    strung::set_static("+","+");
     let text = CASCADE.strung_static("+tup.0++tup.1+");
     println!("strung_static cascading: {}",&text);
 

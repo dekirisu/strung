@@ -8,7 +8,7 @@ struct Test {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    strung::config::static_global("{","}");
+    strung::set_static("{","}");
     let mut group = c.benchmark_group("Performance");
     let string = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, 
     sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, 
