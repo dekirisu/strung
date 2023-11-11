@@ -93,7 +93,6 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
         let mut strs_angle   = vec![];
         let mut strs_dollar  = vec![];
         let mut strs_hashtag = vec![];
-        let mut strs_raw     = vec![];
 
         let mut cscd_idents       = vec![];
         let mut cscd_strs_dollar  = vec![];
@@ -122,8 +121,7 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
             strs_dollar.push(format!("${}",&f_ident));
             strs_hashtag.push(format!("#{}",&f_ident));
             
-            idents.push(f_ident.clone());
-            strs_raw.push(f_ident);
+            idents.push(f_ident);
 
         }
 
@@ -172,12 +170,12 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
 
                 fn strung_static(&self, text: &str) -> String {
                     let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},stringify!(#strs_raw),unsafe{STRUNG_POST}),&self.#idents.to_string());)*
+                    #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},stringify!(#idents),unsafe{STRUNG_POST}),&self.#idents.to_string());)*
                     output
                 }
                 fn strung_dynamic(&self, pre: &str, post:&str, text: &str) -> String {
                     let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",pre,stringify!(#strs_raw),post),&self.#idents.to_string());)*
+                    #(output = output.replace(&format!("{}{}{}",pre,stringify!(#idents),post),&self.#idents.to_string());)*
                     output
                 }
 
