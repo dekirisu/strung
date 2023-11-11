@@ -1,6 +1,6 @@
 /// Proc macro for strung!  
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{*, punctuated::Punctuated};
 
 /* ---------------------------------- Core ---------------------------------- */
@@ -86,7 +86,7 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
 
     if let Data::Struct(strct) = &ast.data {
 
-        let mut idents       = (vec![], vec![]);
+        let mut idents       = vec![];
         let mut strs_main    = vec![];
         let mut strs_curly   = vec![];
         let mut strs_dollry  = vec![];
@@ -95,7 +95,7 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
         let mut strs_hashtag = vec![];
         let mut strs_raw     = vec![];
 
-        let mut cscd_idents       = (vec![], vec![]);
+        let mut cscd_idents       = vec![];
         let mut cscd_strs_dollar  = vec![];
         let mut cscd_strs_hashtag = vec![];
 
@@ -107,14 +107,14 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                     let f_name = field.ident.as_ref().unwrap().to_string();
                     
                     if field.cascade() {
-                        cscd_idents.0.push(f_ident.clone());
+                        cscd_idents.push(f_ident.to_token_stream());
                         cscd_strs_dollar.push(format!("${}.",&f_name));
                         cscd_strs_hashtag.push(format!("#{}.",&f_name));
                         continue;
                     }
                     if field.ignored() {continue;}
 
-                    idents.0.push(f_ident);
+                    idents.push(f_ident.to_token_stream());
                     strs_main.push(format!("{}{}{}",&pre,&f_name,&post));
 
                     strs_curly.push(format!("{{{}}}",&f_name,));
@@ -131,14 +131,14 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
                 for (i,field) in fields.unnamed.iter().enumerate() {
 
                     if field.cascade() {
-                        cscd_idents.1.push(Index::from(i));
+                        cscd_idents.push(Index::from(i).to_token_stream());
                         cscd_strs_dollar.push(format!("${}.",i));
                         cscd_strs_hashtag.push(format!("#{}.",i));
                         continue;
                     }
                     if field.ignored() {continue;}
 
-                    idents.1.push(Index::from(i));
+                    idents.push(Index::from(i).to_token_stream());
                     strs_main.push(format!("{}{}{}",&pre,i,&post));
 
                     strs_curly.push(format!("{{{}}}",i));
@@ -157,28 +157,22 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
         macro_rules! prefab {
             ($name:ident, $strs:expr) => {{ 
                 let strs = $strs;
-                let (id_nmd, id_unmd) = &idents;
                 quote! {
                 fn $name(&self, text: &str) -> String {
                     let mut output = text.to_string();
-                    #(output = output.replace(&#strs,  &self.#id_nmd.to_string());)*
-                    #(output = output.replace(&#strs, &self.#id_unmd.to_string());)*
+                    #(output = output.replace(&#strs, &self.#idents.to_string());)*
                     output
                 }
             }}};
             ($litaf:expr, $name:ident, $strs:expr, $cscd_strs:expr) => {{ 
                 let strs = $strs;
-                let (id_nmd, id_unmd) = &idents;
-                let (cid_nmd, cid_unmd) = &cscd_idents;
                 let cstrs = &$cscd_strs;
                 quote! {
                 fn $name(&self, text: &str) -> String {
                     let mut output = text.to_string();
-                    #(output = output.replace(&#strs,  &self.#id_nmd.to_string());)*
-                    #(output = output.replace(&#strs, &self.#id_unmd.to_string());)*
+                    #(output = output.replace(&#strs, &self.#idents.to_string());)*
                     #(output = output.replace(&#cstrs,$litaf);)*
-                    #(output = self.#cid_nmd.$name(&output);)*
-                    #(output = self.#cid_unmd.$name(&output);)*
+                    #(output = self.#cscd_idents.$name(&output);)*
                     output
                 }
             }}}
@@ -191,8 +185,6 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
 
         let strung_dollar   = prefab!("$",strung_dollar,  strs_dollar,  cscd_strs_dollar);
         let strung_hashtag  = prefab!("#",strung_hashtag, strs_hashtag, cscd_strs_hashtag);
-
-        let (idents_0, idents_1) = idents;
 
         let gen = quote! {
             impl #impl_generics Strung for #name #ty_generics #where_clause {
@@ -207,14 +199,12 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
 
                 fn strung_static(&self, text: &str) -> String {
                     let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},&#strs_raw,unsafe{STRUNG_POST}),&self.#idents_0.to_string());)*
-                    #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},&#strs_raw,unsafe{STRUNG_POST}),&self.#idents_1.to_string());)*
+                    #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},&#strs_raw,unsafe{STRUNG_POST}),&self.#idents.to_string());)*
                     output
                 }
                 fn strung_dynamic(&self, pre: &str, post:&str, text: &str) -> String {
                     let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",pre,&#strs_raw,post),&self.#idents_0.to_string());)*
-                    #(output = output.replace(&format!("{}{}{}",pre,&#strs_raw,post),&self.#idents_1.to_string());)*
+                    #(output = output.replace(&format!("{}{}{}",pre,&#strs_raw,post),&self.#idents.to_string());)*
                     output
                 }
 
