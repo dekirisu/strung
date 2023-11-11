@@ -103,4 +103,38 @@ fn main(){
     let text = CASCADE.strung_dollar("$tup.0$tup.1");
     println!("strung_dollar cascading: {}",&text);
  
+    // [strung_hashtag] and [strung_dollar] also enable cascading
+    let CASCADE = TestCascade {tup: TestTup(2,"nd")};
+    let text = CASCADE.strung_hashtag("#tup.0#tup.1");
+    println!("strung_hashtag cascading: {}",&text);
+
+    // [strung_hashtag] and [strung_dollar] also enable cascading
+    let CASCADE = TestCascade {tup: TestTup(2,"nd")};
+    let text = CASCADE.strung_curly("{tup.0}{tup.1}");
+    println!("strung_curly cascading: {}",&text);
+
+    // [strung_hashtag] and [strung_dollar] also enable cascading
+    let CASCADE = TestCascade {tup: TestTup(2,"nd")};
+    let text = CASCADE.strung_angle("<tup.0><tup.1>");
+    println!("strung_angle cascading: {}",&text);
+    
+    // [strung_hashtag] and [strung_dollar] also enable cascading
+    let CASCADE = TestCascade {tup: TestTup(2,"nd")};
+    let text = CASCADE.strung_dollry("${tup.0}${tup.1}");
+    println!("strung_dollry cascading: {}",&text);
+    
+    // [strung_hashtag] and [strung_dollar] also enable cascading
+    let CASCADE = TestCascade {tup: TestTup(2,"nd")};
+    let text = CASCADE.strung("{tup.0}{tup.1}");
+    println!("strung cascading: {}",&text);
+ 
+    // most flexible - inline setting via [strung_dynamic] - a bit less efficient
+    let text = CASCADE.strung_dynamic("<",">","<tup.0><tup.1>");
+    println!("strung_dynamic cascading: {}",&text);
+
+    // also flexible - global static variables, you can easily change ...
+    strung::config::static_global("+","+");
+    let text = CASCADE.strung_static("+tup.0++tup.1+");
+    println!("strung_static cascading: {}",&text);
+
 }
