@@ -120,7 +120,7 @@ fn main(){
     
     // [strung_hashtag] and [strung_dollar] also enable cascading
     let CASCADE = TestCascade {tup: TestTup(2,"nd")};
-    let text = CASCADE.strung_dollry("${tup.0}${tup.1}");
+    let text = CASCADE.strung_dollry("${0.0}${tup.1}");
     println!("strung_dollry cascading: {}",&text);
     
     // [strung_hashtag] and [strung_dollar] also enable cascading
@@ -134,7 +134,7 @@ fn main(){
 
     // also flexible - global static variables, you can easily change ...
     strung::set_static("+","+");
-    let text = CASCADE.strung_static("+tup.0++tup.1+");
+    let text = CASCADE.strung_static("+0.0++0.1+");
     println!("strung_static cascading: {}",&text);
 
     // most flexible - using generic const chars

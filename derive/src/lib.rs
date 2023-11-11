@@ -84,132 +84,163 @@ fn impl_strung_macro(ast: &DeriveInput) -> TokenStream {
         }
     }
 
-    if let Data::Struct(strct) = &ast.data {
+    match &ast.data {
+        Data::Struct(strct) => {
 
-        let mut idents       = vec![];
-        let mut strs_main    = vec![];
-        let mut strs_curly   = vec![];
-        let mut strs_dollry  = vec![];
-        let mut strs_angle   = vec![];
-        let mut strs_dollar  = vec![];
-        let mut strs_hashtag = vec![];
+            let mut idents       = vec![];
+            let mut posids       = vec![];
+            let mut strs_main    = vec![];
+            let mut strs_curly   = vec![];
+            let mut strs_dollry  = vec![];
+            let mut strs_angle   = vec![];
+            let mut strs_dollar  = vec![];
+            let mut strs_hashtag = vec![];
+    
+            let mut cscd_idents       = vec![];
+            let mut cscd_posids       = vec![];
+            let mut cscd_strs_main    = vec![];
+            let mut cscd_strs_curly   = vec![];
+            let mut cscd_strs_dollry  = vec![];
+            let mut cscd_strs_angle   = vec![];
+            let mut cscd_strs_dollar  = vec![];
+            let mut cscd_strs_hashtag = vec![];
+    
+            for (position,field) in strct.fields.iter().enumerate() {
+                
+                let ident = match &field.ident {
+                    Some(id) => id.to_token_stream(),
+                    None => Index::from(position).to_token_stream(),
+                };
+                let posid = Index::from(position).to_token_stream();
 
-        let mut cscd_idents       = vec![];
-        let mut cscd_strs_main    = vec![];
-        let mut cscd_strs_curly   = vec![];
-        let mut cscd_strs_dollry  = vec![];
-        let mut cscd_strs_angle   = vec![];
-        let mut cscd_strs_dollar  = vec![];
-        let mut cscd_strs_hashtag = vec![];
+                if field.cascade() {
+                    cscd_idents.push(ident.clone());
+                    cscd_strs_main.push(format!("{}{}.",&pre,&ident));
+                    cscd_strs_curly.push(format!("{{{}.",&ident));
+                    cscd_strs_dollry.push(format!("${{{}.",&ident));
+                    cscd_strs_angle.push(format!("<{}.",&ident));
+                    cscd_strs_dollar.push(format!("${}.",&ident));
+                    cscd_strs_hashtag.push(format!("#{}.",&ident));
+                    if field.ident.is_some() {
+                        cscd_idents.push(ident.clone());
+                        cscd_posids.push(posid.clone());
+                        cscd_strs_main.push(format!("{}{}.",&pre,&posid));
+                        cscd_strs_curly.push(format!("{{{}.",&posid));
+                        cscd_strs_dollry.push(format!("${{{}.",&posid));
+                        cscd_strs_angle.push(format!("<{}.",&posid));
+                        cscd_strs_dollar.push(format!("${}.",&posid));
+                        cscd_strs_hashtag.push(format!("#{}.",&posid));
+                    }
+                    continue;
+                }
+                if field.ignored() {continue;}
+    
+                idents.push(ident.clone());
+                posids.push(posid.clone());
+                strs_main.push(format!("{}{}{}",&pre,&ident,&post));
+                strs_curly.push(format!("{{{}}}",&ident,));
+                strs_dollry.push(format!("${{{}}}",&ident));
+                strs_angle.push(format!("<{}>",&ident,));
+                strs_dollar.push(format!("${}",&ident));
+                strs_hashtag.push(format!("#{}",&ident));
+                if field.ident.is_some() {
+                    idents.push(ident);
+                    strs_main.push(format!("{}{}{}",&pre,&posid,&post));
+                    strs_curly.push(format!("{{{}}}",&posid,));
+                    strs_dollry.push(format!("${{{}}}",&posid));
+                    strs_angle.push(format!("<{}>",&posid,));
+                    strs_dollar.push(format!("${}",&posid));
+                    strs_hashtag.push(format!("#{}",&posid));
+                }
 
-        for (position,field) in strct.fields.iter().enumerate() {
-            
-            let ident = match &field.ident {
-                Some(id) => id.to_token_stream(),
-                None => Index::from(position).to_token_stream(),
+            }
+    
+            macro_rules! prefab {
+                ($name:ident, $strs:expr) => {{ 
+                    let strs = $strs;
+                    quote! {
+                    fn $name(&self, text: &str) -> String {
+                        let mut output = text.to_string();
+                        #(output = output.replace(&#strs, &self.#idents.to_string());)*
+                        output
+                    }
+                }}};
+                ($litaf:expr, $name:ident, $strs:expr, $cscd_strs:expr) => {{ 
+                    let strs = $strs;
+                    let cstrs = &$cscd_strs;
+                    quote! {
+                    fn $name(&self, text: &str) -> String {
+                        let mut output = text.to_string();
+                        #(output = output.replace(&#strs, &self.#idents.to_string());)*
+                        #(output = output.replace(&#cstrs,$litaf);)*
+                        #(output = self.#cscd_idents.$name(&output);)*
+                        output
+                    }
+                }}}
+            }
+    
+            let strung = quote! {
+                fn strung(&self, text: &str) -> String {
+                    let mut output = text.to_string();
+                    #(output = output.replace(&#strs_main, &self.#idents.to_string());)*
+                    #(output = output.replace(&#cscd_strs_main,#pre);)*
+                    #(output = self.#cscd_idents.strung(&output);)*
+                    output
+                }
             };
-            if field.cascade() {
-                cscd_idents.push(ident.clone());
-                cscd_strs_main.push(format!("{}{}.",&pre,&ident));
-                cscd_strs_curly.push(format!("{{{}.",&ident));
-                cscd_strs_dollry.push(format!("${{{}.",&ident));
-                cscd_strs_angle.push(format!("<{}.",&ident));
-                cscd_strs_dollar.push(format!("${}.",&ident));
-                cscd_strs_hashtag.push(format!("#{}.",&ident));
-                continue;
-            }
-            if field.ignored() {continue;}
-
-            strs_main.push(format!("{}{}{}",&pre,&ident,&post));
-
-            strs_curly.push(format!("{{{}}}",&ident,));
-            strs_dollry.push(format!("${{{}}}",&ident));
-            strs_angle.push(format!("<{}>",&ident,));
-
-            strs_dollar.push(format!("${}",&ident));
-            strs_hashtag.push(format!("#{}",&ident));
-            
-            idents.push(ident);
-
-        }
-
-        macro_rules! prefab {
-            ($name:ident, $strs:expr) => {{ 
-                let strs = $strs;
-                quote! {
-                fn $name(&self, text: &str) -> String {
-                    let mut output = text.to_string();
-                    #(output = output.replace(&#strs, &self.#idents.to_string());)*
-                    output
+            let strung_curly    = prefab!("{",strung_curly,   strs_curly,   cscd_strs_curly);
+            let strung_angle    = prefab!("<",strung_angle,   strs_angle,   cscd_strs_angle);
+            let strung_dollry   = prefab!("${",strung_dollry, strs_dollry,  cscd_strs_dollry);
+            let strung_dollar   = prefab!("$",strung_dollar,  strs_dollar,  cscd_strs_dollar);
+            let strung_hashtag  = prefab!("#",strung_hashtag, strs_hashtag, cscd_strs_hashtag);
+    
+            let gen = quote! {
+                impl #impl_generics Strung for #name #ty_generics #where_clause {
+    
+                    #strung
+                    #strung_curly
+                    #strung_angle
+                    #strung_dollry
+    
+                    #strung_dollar
+                    #strung_hashtag
+    
+                    fn strung_static(&self, text: &str) -> String {
+                        let mut output = text.to_string();
+                        #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},stringify!(#idents),unsafe{STRUNG_POST}),&self.#idents.to_string());)*
+                        #(output = output.replace(&format!("{}{}.",unsafe{STRUNG_PRE},stringify!(#cscd_idents)),unsafe{STRUNG_PRE});)*
+                        #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},stringify!(#posids),unsafe{STRUNG_POST}),&self.#idents.to_string());)*
+                        #(output = output.replace(&format!("{}{}.",unsafe{STRUNG_PRE},stringify!(#cscd_posids)),unsafe{STRUNG_PRE});)*
+                        #(output = self.#cscd_idents.strung_static(&output);)*
+                        output
+                    }
+                    fn strung_dynamic(&self, pre: &str, post:&str, text: &str) -> String {
+                        let mut output = text.to_string();
+                        #(output = output.replace(&format!("{}{}{}",pre,stringify!(#idents),post),&self.#idents.to_string());)*
+                        #(output = output.replace(&format!("{}{}.",pre,stringify!(#cscd_idents)),pre);)*
+                        #(output = output.replace(&format!("{}{}{}",pre,stringify!(#posids),post),&self.#idents.to_string());)*
+                        #(output = output.replace(&format!("{}{}.",pre,stringify!(#cscd_posids)),pre);)*
+                        #(output = self.#cscd_idents.strung_dynamic(pre,post,&output);)*
+                        output
+                    }
+    
+                    fn strung_generic <const STRUNG_PRE:char,const STRUNG_POST:char> (&self, text: &str) -> String {
+                        let pre = STRUNG_PRE.to_string();
+                        let post = STRUNG_POST.to_string();
+                        let mut output = text.to_string();
+                        #(output = output.replace(&format!("{}{}{}",&pre,stringify!(#idents),post),&self.#idents.to_string());)*
+                        #(output = output.replace(&format!("{}{}.",&pre,stringify!(#cscd_idents)),&pre);)*
+                        #(output = output.replace(&format!("{}{}{}",&pre,stringify!(#posids),post),&self.#idents.to_string());)*
+                        #(output = output.replace(&format!("{}{}.",&pre,stringify!(#cscd_posids)),&pre);)*
+                        #(output = self.#cscd_idents.strung_dynamic(&pre,&post,&output);)*
+                        output
+                    }
+    
                 }
-            }}};
-            ($litaf:expr, $name:ident, $strs:expr, $cscd_strs:expr) => {{ 
-                let strs = $strs;
-                let cstrs = &$cscd_strs;
-                quote! {
-                fn $name(&self, text: &str) -> String {
-                    let mut output = text.to_string();
-                    #(output = output.replace(&#strs, &self.#idents.to_string());)*
-                    #(output = output.replace(&#cstrs,$litaf);)*
-                    #(output = self.#cscd_idents.$name(&output);)*
-                    output
-                }
-            }}}
-        }
-
-        let strung = quote! {
-            fn strung(&self, text: &str) -> String {
-                let mut output = text.to_string();
-                #(output = output.replace(&#strs_main, &self.#idents.to_string());)*
-                #(output = output.replace(&#cscd_strs_main,#pre);)*
-                #(output = self.#cscd_idents.strung(&output);)*
-                output
-            }
-        };
-        let strung_curly    = prefab!("{",strung_curly,   strs_curly,   cscd_strs_curly);
-        let strung_angle    = prefab!("<",strung_angle,   strs_angle,   cscd_strs_angle);
-        let strung_dollry   = prefab!("${",strung_dollry, strs_dollry,  cscd_strs_dollry);
-        let strung_dollar   = prefab!("$",strung_dollar,  strs_dollar,  cscd_strs_dollar);
-        let strung_hashtag  = prefab!("#",strung_hashtag, strs_hashtag, cscd_strs_hashtag);
-
-        let gen = quote! {
-            impl #impl_generics Strung for #name #ty_generics #where_clause {
-
-                #strung
-                #strung_curly
-                #strung_angle
-                #strung_dollry
-
-                #strung_dollar
-                #strung_hashtag
-
-                fn strung_static(&self, text: &str) -> String {
-                    let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",unsafe{STRUNG_PRE},stringify!(#idents),unsafe{STRUNG_POST}),&self.#idents.to_string());)*
-                    #(output = output.replace(&format!("{}{}.",unsafe{STRUNG_PRE},stringify!(#cscd_idents)),unsafe{STRUNG_PRE});)*
-                    #(output = self.#cscd_idents.strung_static(&output);)*
-                    output
-                }
-                fn strung_dynamic(&self, pre: &str, post:&str, text: &str) -> String {
-                    let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",pre,stringify!(#idents),post),&self.#idents.to_string());)*
-                    #(output = output.replace(&format!("{}{}.",pre,stringify!(#cscd_idents)),pre);)*
-                    #(output = self.#cscd_idents.strung_dynamic(pre,post,&output);)*
-                    output
-                }
-
-                fn strung_generic <const STRUNG_PRE:char,const STRUNG_POST:char> (&self, text: &str) -> String {
-                    let pre = STRUNG_PRE.to_string();
-                    let post = STRUNG_POST.to_string();
-                    let mut output = text.to_string();
-                    #(output = output.replace(&format!("{}{}{}",&pre,stringify!(#idents),post),&self.#idents.to_string());)*
-                    #(output = output.replace(&format!("{}{}.",&pre,stringify!(#cscd_idents)),&pre);)*
-                    #(output = self.#cscd_idents.strung_dynamic(&pre,&post,&output);)*
-                    output
-                }
-
-            }
-        };
-        gen.into()
-    } else {panic!("Not a Struct!")}
+            };
+            gen.into()
+        },
+        Data::Enum(_) => {todo!()},
+        Data::Union(_) => panic!("Unions not supported!"),
+    }
 }
