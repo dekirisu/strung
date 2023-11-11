@@ -19,9 +19,10 @@ fn criterion_benchmark(c: &mut Criterion) {
     et justo duo {num} dolores et ea rebum. Stet clita kasd gubergren, no sea takimata {name} sanctus est 
     Lorem {name} ipsum dolor sit amet.".to_owned();
     let named = Test {num: 1, name: "st"};
-    group.bench_function("default", |b| b.iter(|| named.strung(black_box(&string))));
+    group.bench_function("default/prefabs/per-struct", |b| b.iter(|| named.strung(black_box(&string))));
     group.bench_function("global", |b| b.iter(|| named.strung_static(black_box(&string))));
     group.bench_function("dynamic", |b| b.iter(|| named.strung_dynamic("{","}",black_box(&string))));
+    group.bench_function("generic", |b| b.iter(|| named.strung_generic::<'{','}'>(black_box(&string))));
     group.finish();
 }
 
